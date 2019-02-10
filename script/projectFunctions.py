@@ -1,3 +1,16 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+from __future__ import print_function
+
+#%% 
+import pandas as pd
+import numpy as np
+import operator
+
+
+from sklearn.model_selection import train_test_split
+from datetime import datetime
+
 def loadData (filename):
     
     df = pd.read_csv(filename,delimiter='|')
