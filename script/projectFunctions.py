@@ -155,7 +155,7 @@ def classPrune2(dfData, dfLabels, nc = 60, resto = False):
     quedo = count[[0,1,2]][0:nc]
     poda = count[[0,1,2]][nc:len(count)]
     
-    print ("Numero de clases:", nc,"\nPorcentaje datos:",quedo[2].sum()*100,"%\nMínimo de muestras:", min(quedo[1]))
+    print ("Number of classes:", nc,"\nPercentage of data:",quedo[2].sum()*100,"%\nMinimum of samples:", min(quedo[1]))
 
     if not resto:
         ind = []
@@ -174,7 +174,7 @@ def classPrune2(dfData, dfLabels, nc = 60, resto = False):
 def expandirVariable(df, nameCol):
     dfNuevo = df.copy()
     numVal = len(dfNuevo[nameCol].unique())
-    print("Expandiendo "+ nameCol + " a dimension " + str(numVal))
+    print("Expanding "+ nameCol + " to dimension " + str(numVal))
     
     for i in range(numVal):
         nameColNuevo = nameCol + "_" + str(i+1)
