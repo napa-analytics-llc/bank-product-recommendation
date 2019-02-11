@@ -11,12 +11,41 @@ import operator
 from sklearn.model_selection import train_test_split
 from datetime import datetime
 
+
+##
+## loadData
+## Version: 0.0.1
+##
+## Description: A file is passed and the result is returned
+## in dataframe format sorted by buyer ID and date.
+##
+## Input:
+## - filename: name of the file.
+##
+## Output:
+## - table: description.
+##
 def loadData (filename):
     
     df = pd.read_csv(filename,delimiter='|')
     df = df.sort_values(by=['ID_Customer', 'Cod_Fecha'], ascending=[1, 1]).reset_index(drop=True)
     return df
 
+##
+## getDfMap
+## Version: 0.0.1
+##
+## Description: this function receives the train dictionary
+## and the final dataframe and map the product code in the
+## output format
+##
+## Input:
+## - df: dataframe with ID_Customer and predicted product code
+## - dictTrain: dictionary that we have obtained from training
+##
+## Output:
+## - df: with the mapping done
+##
 def getDfMap(df,dictTrain=[]):      
     if dictTrain == []:
         dictTrain = mapProduct.mapPrioris
@@ -28,7 +57,22 @@ def getDfMap(df,dictTrain=[]):
     df = df.replace({"Cod_Prod":dictFinal})
     
     return df
-  
+
+##
+## tratamientoFecha
+## Version: 0.0.1
+##
+## Description: A dataframe is passed and a new column with the number is created
+## of days that have passed since 1950-01-1 until that user has made the
+## purchase of the product
+##
+##
+## Input:
+## - df: dataframe to which we are going to create the column number of days.
+##
+## Output:
+## - dfFecha: we return the df with the new column num_dias.
+##
 def tratamientoFecha(df):
     
     dfFecha=df.copy()
@@ -37,13 +81,25 @@ def tratamientoFecha(df):
     dfFecha["Cod_Fecha"] =  pd.to_datetime(dfFecha["Cod_Fecha"],format='%Y-%m')
     primerMes = pd.datetime(1950, 1, 1, 0, 0, 0)
     
-    #Realizamos la resta del numero de dias desde 1950 y creamos la columna
     # Creation of new column "Num_dias": Subtract from the number of days since 1950.
     dfFecha["Num_Dias"] =  dfFecha["Cod_Fecha"]-primerMes 
     dfFecha["Num_Dias"] = (dfFecha["Num_Dias"] / np.timedelta64(1, 'D')).astype(int)
     
     return dfFecha
-  
+
+##
+## mapProduct
+## Version: 0.0.7
+##
+## Description: a train dataframe is passed and the product mapping is obtained
+## ordered by priori in case of passing the variable prioris to True.
+##
+## Input:
+## - df: dataframe from which we will obtain the product ids
+##
+## Output:
+## - dfMap: dataframe with the mapping applied.
+## 
 def mapProduct (df, prioris=True):
     dfMap=df.copy()
     mapProduct.mapProd = {}
@@ -80,7 +136,21 @@ def mapProduct (df, prioris=True):
             mapProduct.mapProd[int(map_prod[idGenerado])]=int(idGenerado)
     
     return dfMap
-  
+
+##
+## mapProdByDict
+## Version: 0.0.1
+##
+## Description: Maps the product code of a dataframe with the dictionary
+## passed by argument.
+##
+## Input:
+## - df: dataframe that contains the column cod_prod to map it.
+## - mapTest: dictionary with the mapping of the product code
+##
+## Output:
+## - df: dataframe with the mapping applied.
+##  
 def mapProdByDict(df,mapTest = []):      
     if mapTest == []:
         mapTest = mapProduct.mapPrioris
@@ -88,7 +158,27 @@ def mapProdByDict(df,mapTest = []):
     df = df.replace({"Cod_Prod":mapTest})
     
     return df
-  
+
+##
+## addProdAnt
+## Version: 0.0.1
+##
+## Description: function that extracts products as new columns
+## previous purchased by the user, the days that have passed since it was
+## have bought the X previous products and the date of the previous product.
+##
+## Input:
+## - df: dataframe from which we are going to extract the information mentioned in the
+## description of the function.
+## - num_ant: number of previous products to be taken into account
+## - diasAnt: if we pass this variable we will also take into account the days that
+## have passed since the previous X products were purchased
+## - fechaAnt1: if we add this variable to true we add the previous date of the
+## previous product contracted by the customer
+##
+## Output:
+## - df2: normalized dataframe.
+##  
 def addProdAnt(df,num_ant = 1, diasAnt = False, fechaAnt1 = True):
     
     df2 = df.copy().reset_index(drop=True)
@@ -135,7 +225,20 @@ def addProdAnt(df,num_ant = 1, diasAnt = False, fechaAnt1 = True):
             df2["Num_Dias_Ant"+str(ant+1)] = pd.DataFrame(dffec)
 
     return df2
+
   
+##
+## createTest
+## Version: 0.0.1
+##
+## Description: this function creates the test dataframe with one record per user
+##
+## Input:
+## - df: dataframe from which we will test.
+##
+## Output:
+## - dfTest: dataframe with one record per user.
+##
 def createTest (df):
     dfTest2 = df.copy()
     
@@ -168,11 +271,42 @@ def createTest (df):
         
 
     return dfTest
-  
+
+##
+## subset
+## Version: 0.0.1
+##
+## Description: extracts a subsampling from the original dataset.
+##
+## Input:
+## - dfData: dataframe with the data
+## - dfLabels: dataframe with the class
+## - size: percentage that we want to extract from the data
+## - seed: seed for subsampling
+##
+## Output:
+## - X_train: dataframe the reduction applied.
+##  
 def subset(dfData, dfLabels, size=.01, seed=45):
     X_train, X_test, y_train, y_test = train_test_split( dfData, dfLabels, train_size=size, random_state=seed)
     return X_train
 
+##
+## classPrune2
+## Version: 0.0.1
+##
+## Description: Eliminate classes given a minimum number of classes
+##
+## Input:
+## - dfData: dataframe with the data
+## - dfLabels: dataframe with the class
+## - nc: number of classes
+## - resto: if set to True, add the rest of the class to a variable and put the label
+## of the majority class to that set
+##
+## Output:
+## - df: dataframe with the pruning done.
+##
 def classPrune2(dfData, dfLabels, nc = 60, resto = False):
     df = dfData.copy()
     count = dfLabels.value_counts()
@@ -195,7 +329,17 @@ def classPrune2(dfData, dfLabels, nc = 60, resto = False):
         for i in ind:
             df.loc[i,"Cod_Prod"] = majClass
     return df
-  
+
+##
+## expandVariable
+## Version: 0.0.1
+##
+## Description: Expands the variable passed by argument
+##
+## Input:
+## - df: dataframe in recommendation format
+## - nameCol: column to expand
+##
 def expandirVariable(df, nameCol):
     dfNuevo = df.copy()
     numVal = len(dfNuevo[nameCol].unique())
@@ -208,7 +352,20 @@ def expandirVariable(df, nameCol):
         
     dfNuevo = dfNuevo.drop(nameCol, 1)
     return dfNuevo
-  
+
+##
+## mapAparicionProd
+## Version: 0.0.1
+##
+## Description: create a dictionary with the id of the prouct and its order of appearance
+##
+## Input:
+## - df: dataframe to extract the information of the date of appearance
+## - products: list of all products
+##
+## Output:
+## - fechaIDtemp: dictionary with the date and order in which each product appears
+##  
 def mapAparicionProd(df,productos = []):
 
     if productos == []:
@@ -232,7 +389,19 @@ def mapAparicionProd(df,productos = []):
          
     mapAparicionProd.mapAparicion = fechaIDtemp
     return fechaIDtemp
-  
+
+##
+## addAparicionProdRow
+## Version: 0.0.1
+##
+## Description: enter the temporary mark of appearance of each product in a row
+##
+## Input:
+## - row: row a where we are going to add the value
+##
+## Output:
+## - tiempoAnt: value that the row will take
+##  
 def addAparicionProdRow(row):
     tiempoAnt = -1
     
@@ -244,14 +413,42 @@ def addAparicionProdRow(row):
                 
         
     return tiempoAnt
-  
+
+##
+## addTiempoProdAnt
+## Version: 0.0.1
+##
+## Description: we create a column with the temporary mark of appearance of the product,
+## from the previous date
+##
+## Input:
+## - dfData: dataframe in which we create the new column
+##
+## Output:
+## - df: modified dataframe
+##  
 def addTiempoProdAnt(dfData):
     df = dfData.copy()
     
     df["Aparicion_Prod"] = df.apply(addAparicionProdRow, axis=1)
     
     return df
-  
+
+##
+## mapDiasInicio
+## Version: 0.0.1
+##
+## Description: we create a map with the buyer's ID and the date of purchase of the
+## first product.
+##
+## Input:
+## - df: dataframe from which we extract information from the buyer's ID and the date
+## of your first product purchased.
+##
+## Output:
+## - mapUFecha: dictionary with the buyer's id and the date of the first product
+##  bought.
+##
 def mapDiasInicio(df):
     dfUsuarioFecha = df[["ID_Customer","Cod_Fecha"]].groupby(["ID_Customer"]).first().reset_index()
     mapUFecha = dict(zip(dfUsuarioFecha.ID_Customer, dfUsuarioFecha.Cod_Fecha))
@@ -261,7 +458,19 @@ def mapDiasInicio(df):
     else:
         mapDiasInicio.mapUsuarioFecha = mapUFecha
     return mapUFecha
-  
+
+##
+## addDiasInicioRow
+## Version: 0.0.1
+##
+## Description: function that returns the days since the user started buying
+##
+## Input:
+## - row: row from which we will extract the data
+##
+## Output:
+## - val: value of the days that have passed since the user has started to buy
+##  
 def addDiasInicioRow(row):
 
     if row["Cod_Prod_Ant1"] == -1:
@@ -270,14 +479,40 @@ def addDiasInicioRow(row):
         val =  (row["Cod_Fecha_Ant"] - mapDiasInicio.mapUsuarioFecha[row["ID_Customer"]]).days
         
     return val
-  
+
+##
+## addDiasInicioAnt
+## Version: 0.0.1
+##
+## Description: we create a column with the days since the user starts buying
+## from the previous date.
+##
+## Input:
+## - dfData: dataframe in which we create the new column
+##
+## Output:
+## - df: modified dataframe
+##  
 def addDiasInicioAnt(dfData):
     df = dfData.copy()
     
     df["DiasDesde_Inicio"] = df.apply(addDiasInicioRow, axis=1)
     
     return df
-  
+
+##
+## numProductosComprados
+## Version: 0.0.1
+##
+## Description: Extract the number of products purchased by user
+##
+## Input:
+## - df: dataframe from which we extract the data
+## - test: if we pass the test we must subtract 1 from the prod number
+##
+## Output:
+## - nprods: dataframe with the number of products purchased
+##  
 def numProductosComprados(df, test = False):
     nprods = df.groupby("ID_Customer").Cod_Prod.count().reset_index()
     if test:
@@ -285,10 +520,35 @@ def numProductosComprados(df, test = False):
     else:
         return nprods["Cod_Prod"] - 1
 
+##
+## ultimoElementoSerie
+## Version: 0.0.1
+##
+## Description: Extract the last element of the series from each user
+##
+## Input:
+## - df: dataframe from which we extract the data
+##
+## Output:
+## - df2: dataframe for each user his last series
+##
 def ultimoElementoSerie(df):
     df2 = df.copy()
     return df2.groupby("ID_Customer").last().reset_index()
-  
+
+##
+## restaFechas
+## Version: 0.0.1
+##
+## Description: we create columns with the differences of purchase dates of the
+## previous products in days.
+##
+## Input:
+## - df: dataframe from which we extract the data
+##
+## Output:
+## - df2: dataframe with subtraction of dates applied
+##  
 def restaFechas(dfData):
     
     df = dfData.copy()
@@ -303,7 +563,20 @@ def restaFechas(dfData):
     
     
     return df
-  
+
+##
+## modificaColumna
+## Version: 0.0.1
+##
+## Description: select the event belonging to the fusion of
+## rural boxes based on the previous date
+##
+## Input:
+## - row: row with the data that we are going to modify
+##
+## Output:
+## - val: value that corresponds to an event in the history
+##  
 def modificaColumna(row):
     fecha1 = datetime(2000, 1, 1, 0, 0, 0) #merger of banks in the area of Andalusia and Madrid.
     fecha2 = datetime(2007, 1, 1, 0, 0, 0) #merger of banks in the area of Castilla and Leon.
@@ -319,7 +592,20 @@ def modificaColumna(row):
     else:
         val = 3
     return val
-  
+
+##
+## acontecimiento
+## Version: 0.0.1
+##
+## Description: add the event belonging to the fusion of
+## rural boxes based on the previous date
+##
+## Input:
+## - dfData: dataframe in which we create the new column
+##
+## Output:
+## - df: modified dataframe
+##  
 def acontecimiento(dfData):
     df = dfData.copy()
     
@@ -327,13 +613,37 @@ def acontecimiento(dfData):
     
     return df
 
+##
+## mapYearPIB
+## Version: 0.0.1
+##
+## Description: create a dictionary with GDP per capita per year.
+##
+## Input:
+##
+## Output:
+## - mapYearPIB.mapPIB: dictionary with the year associated with its GDP per capita
+##
 def mapYearPIB():
     dfPIB =  pd.read_csv("PIB.txt",delimiter='\t')
 
     mapYearPIB.mapPIB = pd.Series(dfPIB.PIB.values,index=dfPIB.Year).to_dict()
     
     return mapYearPIB.mapPIB
-  
+
+##
+## addPIBRow
+## Version: 0.0.1
+##
+## Description: select the GDP per capita of the date of the previous purchase
+## of a customer
+##
+## Input:
+## - row: row from which we extract the information
+##
+## Output:
+## - val: value of the per capita value of the year of the previous purchase
+##  
 def addPIBRow(row):
     
     try:
@@ -347,7 +657,20 @@ def addPIBRow(row):
     except KeyError: #if it is less than 1961 we do not have GDP data so we put it to 0.
         val = 147
     return val
-  
+
+##
+## addPIBAnt
+## Version: 0.0.1
+##
+## Description: select the GDP per capita of the date of the previous purchase
+## of a customer
+##
+## Input:
+## - dfData: dataframe in which we create the new column
+##
+## Output:
+## - df: modified dataframe
+##  
 def addPIBAnt(dfData):
     df = dfData.copy()
     
