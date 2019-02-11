@@ -16,6 +16,18 @@ def loadData (filename):
     df = pd.read_csv(filename,delimiter='|')
     df = df.sort_values(by=['ID_Customer', 'Cod_Fecha'], ascending=[1, 1]).reset_index(drop=True)
     return df
+
+def getDfMap(df,dictTrain=[]):      
+    if dictTrain == []:
+        dictTrain = mapProduct.mapPrioris
+        
+    dictFinal={}
+    for idGenerado in dictTrain.keys():
+        dictFinal[int(dictTrain[idGenerado])]= str(idGenerado).zfill(4)
+    
+    df = df.replace({"Cod_Prod":dictFinal})
+    
+    return df
   
 def tratamientoFecha(df):
     
@@ -272,6 +284,7 @@ def numProductosComprados(df, test = False):
         return nprods["Cod_Prod"]
     else:
         return nprods["Cod_Prod"] - 1
+
 def ultimoElementoSerie(df):
     df2 = df.copy()
     return df2.groupby("ID_Customer").last().reset_index()
@@ -313,6 +326,7 @@ def acontecimiento(dfData):
     df["AcontecimientoAnt"] = df.apply(modificaColumna, axis=1)
     
     return df
+
 def mapYearPIB():
     dfPIB =  pd.read_csv("PIB.txt",delimiter='\t')
 
